@@ -7,6 +7,9 @@
 # --- Upstream llama.cpp checkout (cloned by scripts/setup.sh, not vendored) ---
 /llama.cpp/
 
+# --- Local deployment runtime state (pid, log, metadata from deploy.sh) ---
+/.run/
+
 # --- Python ---
 __pycache__/
 *.pyc

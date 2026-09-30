@@ -133,7 +133,7 @@ claim. The file has since been made executable (`chmod +x`); re-running
 - Any GPU projection. See §6.
 
 An earlier, separate round of model-level testing (recorded in
-[03-model-selection.md](../../docs/03-model-selection.md)) did measure all three
+[02-model-selection.md](../../docs/02-model-selection.md)) did measure all three
 models end-to-end and produced the tok/s figures quoted there. Those are model-
 level observations, not this quant-level campaign, and the two should not be
 conflated.
@@ -158,7 +158,7 @@ quantization-track/
 ```
 
 Model files are not committed. See
-[04-deployment.md](../../docs/04-deployment.md) §3 for acquisition.
+[03-deployment.md](../../docs/03-deployment.md) §3 for acquisition.
 
 ---
 
@@ -169,10 +169,15 @@ Model files are not committed. See
 bash benchmarks/quantization-track/scripts/run_file.sh e2b_qat <path/to.gguf>
 ```
 
+All paths are resolved relative to the repository, so the track runs from any
+checkout location. Each stage reports its own failure into `results/master.log`
+and the suite aborts if fewer than 11 prompts were recorded, so a truncated run
+cannot be mistaken for a complete one.
+
 Expect on the order of 3–4 minutes per cell for bench + eval, plus ~2 minutes
 for the perplexity pass. Peak RSS stays within ~4.2 GiB for the E2B cells; the
 E4B cells are the ones that push swap, per
-[04-deployment.md](../../docs/04-deployment.md) §4.
+[03-deployment.md](../../docs/03-deployment.md) §4.
 
 ---
 

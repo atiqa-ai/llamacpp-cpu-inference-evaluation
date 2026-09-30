@@ -1,0 +1,23 @@
+# Normalize line endings for text files so benchmark results diff cleanly
+# across contributors on different platforms.
+* text=auto eol=lf
+
+*.sh    text eol=lf
+*.py    text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.tsv   text eol=lf
+LICENSE text eol=lf
+
+# Benchmark artifacts are logs; keep them out of language statistics.
+results/*.log linguist-generated=true
+results/*.time linguist-generated=true
+results/*.bench.md linguist-generated=true
+
+# Model weights and compiled output must never be normalized or diffed.
+*.gguf       binary
+*.safetensors binary
+*.bin        binary
+
+# Vendored upstream build tree (ignored anyway, listed for safety).
+llama.cpp/** binary linguist-vendored

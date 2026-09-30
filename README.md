@@ -15,9 +15,9 @@ estimates and are never presented as measurements.
 
 | Document | Contents |
 | --- | --- |
-| [docs/02-environment.md](docs/02-environment.md) | Build setup (CPU/CUDA/Metal), GGUF format, HF→GGUF conversion, model availability |
-| [docs/03-model-selection.md](docs/03-model-selection.md) | Gemma 4 E2B vs E4B vs Qwen3.5-4B — measured throughput, memory, licenses, and the selection rationale |
-| [docs/04-deployment.md](docs/04-deployment.md) | Serving with `llama-server`, memory profiles, HTTP API, operational notes, production-readiness gaps |
+| [docs/01-environment.md](docs/01-environment.md) | Build setup (CPU/CUDA/Metal), GGUF format, HF→GGUF conversion, model availability |
+| [docs/02-model-selection.md](docs/02-model-selection.md) | Gemma 4 E2B vs E4B vs Qwen3.5-4B — measured throughput, memory, licenses, and the selection rationale |
+| [docs/03-deployment.md](docs/03-deployment.md) | Serving with `llama-server`, memory profiles, HTTP API, operational notes, production-readiness gaps |
 | [benchmarks/quantization-track/REPORT.md](benchmarks/quantization-track/REPORT.md) | Quantization campaign — harness, methodology, results status |
 
 ---
@@ -41,7 +41,7 @@ window to stay resident. Qwen3.5-4B serves as a cross-family sanity check; its
 speed was the lowest of the three.
 
 All three models are Apache-2.0. llama.cpp itself is MIT — the two licenses are
-independent. See [03-model-selection.md](docs/03-model-selection.md) §7.
+independent. See [02-model-selection.md](docs/02-model-selection.md) §7.
 
 ---
 
@@ -51,28 +51,46 @@ independent. See [03-model-selection.md](docs/03-model-selection.md) §7.
 git clone <this-repo>
 cd <this-repo>
 
-./scripts/setup.sh                                    # clone + build llama.cpp (CPU)
-
-# then fetch a model into models/ — see docs/04-deployment.md §3
-./scripts/run-model.sh models/gemma-4-E2B-it-qat-q4_0.gguf
+./scripts/setup.sh                                  # 1. clone + build llama.cpp (CPU)
+./scripts/download-model.sh --preset gemma-4-e2b-qat  # 2. fetch a GGUF into models/
+./scripts/deploy.sh models/gemma-4-E2B-it-Q4_0.gguf  # 3. start serving in the background
 ```
 
-The server listens on `127.0.0.1:8080`:
+`deploy.sh` waits until the server reports healthy, then returns. Check and stop it with:
 
 ```bash
+./scripts/status-model.sh      # health, PID, memory, log tail
+./scripts/stop-model.sh        # graceful stop, escalating to SIGKILL if needed
 curl -s http://127.0.0.1:8080/health
 ```
 
+Available model presets: `--list`.
+
 ### Memory profiles
 
-`run-model.sh` takes an optional profile that sets context/batch flags verified
-to fit this class of hardware:
+Both `deploy.sh` and `run-model.sh` take a profile that sets context/batch flags
+verified to fit this class of hardware:
+
+| Profile | Flags | Use for |
+| --- | --- | --- |
+| `default` | stock (`-b 2048`, `-ub 512`) | Gemma 4 E2B, Qwen3.5-4B |
+| `e4b` | `-c 1024 -b 128 -ub 64` | Gemma 4 E4B — required on this VM |
+| `gpu` | `-ngl 99` | machines with an NVIDIA GPU (needs `GGML_CUDA=ON`) |
 
 ```bash
-./scripts/run-model.sh <model.gguf>            # default — Gemma 4 E2B, Qwen3.5-4B
-./scripts/run-model.sh <e4b-model.gguf> e4b    # -c 1024 -b 128 -ub 64, required for Gemma 4 E4B
-./scripts/run-model.sh <model.gguf> gpu        # -ngl 99 (needs a GGML_CUDA=ON build)
+./scripts/deploy.sh <model.gguf>                  # default
+./scripts/deploy.sh <e4b-model.gguf> e4b --port 8123
 ```
+
+`run-model.sh` is the same launcher without the backgrounding — use it to attach
+to the server console, or with `--foreground` to keep logs on the terminal.
+
+### Binding beyond localhost
+
+The HTTP API has **no authentication by default**. `deploy.sh` refuses a
+non-loopback bind unless you pass `--api-key`, `--api-key-file`, or an explicit
+`--allow-unauthenticated` override. See
+[docs/03-deployment.md](docs/03-deployment.md) §7 before exposing it.
 
 ---
 
@@ -102,15 +120,22 @@ per-run output is retained in `results/`.
 ```
 .
 ├── README.md
+├── LICENSE                       MIT (see note on third-party code below)
 ├── .gitignore
+├── .gitattributes
 ├── docs/
-│   ├── 02-environment.md        build setup, GGUF, conversion, model availability
-│   ├── 03-model-selection.md    three-model comparison and selection rationale
-│   └── 04-deployment.md         llama-server deployment guide
+│   ├── 01-environment.md        build setup, GGUF, conversion, model availability
+│   ├── 02-model-selection.md    three-model comparison and selection rationale
+│   └── 03-deployment.md         llama-server deployment guide
 ├── scripts/
 │   ├── setup.sh                 clone + build llama.cpp (CPU backend)
-│   └── run-model.sh             launch llama-server with a memory profile
+│   ├── download-model.sh        fetch a GGUF from Hugging Face (resumable, verified)
+│   ├── deploy.sh                start the server in the background, wait for health
+│   ├── stop-model.sh            graceful stop via PID file
+│   ├── status-model.sh          health, process, memory, log tail
+│   └── run-model.sh             foreground launcher with a memory profile
 ├── models/                      .gguf files, git-ignored
+├── .run/                        deployment pid/log/metadata, git-ignored
 └── benchmarks/
     ├── quantization-track/
     │   ├── REPORT.md            methodology, results, status
@@ -157,17 +182,17 @@ Stated up front, because they bound everything above:
 - **Quality is qualitative.** No accuracy suite was run, so no numerical quality
   score is claimed anywhere in this repository.
 - **Not production-ready.** No auth, no TLS, no supervision. See
-  [04-deployment.md §7](docs/04-deployment.md).
+  [03-deployment.md §7](docs/03-deployment.md).
 
 ---
 
 ## License
 
-Documentation and scripts in this repository are provided as-is for reference.
+Documentation and scripts in this repository are MIT licensed — see
+[LICENSE](LICENSE).
 
-llama.cpp is licensed under the MIT License — see the upstream
-[LICENSE](https://github.com/ggml-org/llama.cpp/blob/master/LICENSE). It is
-cloned from upstream and not redistributed here.
+llama.cpp is separately MIT licensed. It is cloned from upstream by
+`scripts/setup.sh` and is **not** redistributed here.
 
 Model weights are **not** included. The models referenced (Gemma 4 E2B, Gemma 4
 E4B, Qwen3.5-4B) are Apache-2.0 per their respective model cards; consult those
