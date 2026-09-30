@@ -188,12 +188,14 @@ Stated up front, because they bound everything above:
 
 ## License
 
-Documentation and scripts in this repository are MIT licensed — see
-[LICENSE](LICENSE).
+The documentation and scripts in this repository are MIT licensed — see
+[LICENSE](LICENSE). This repository contains no third-party source code.
 
-llama.cpp is separately MIT licensed. It is cloned from upstream by
-`scripts/setup.sh` and is **not** redistributed here.
+**llama.cpp** is separately MIT licensed. It is cloned from upstream by
+`scripts/setup.sh` and is **not** vendored or redistributed here.
 
-Model weights are **not** included. The models referenced (Gemma 4 E2B, Gemma 4
-E4B, Qwen3.5-4B) are Apache-2.0 per their respective model cards; consult those
-cards for obligations before redistributing any weights.
+**Model weights are not included.** The models referenced by the documentation —
+Gemma 4 E2B, Gemma 4 E4B, and Qwen3.5-4B — are licensed separately by their
+publishers, Apache-2.0 per their respective Hugging Face model cards. Those cards
+are the authoritative source for the terms; consult them before redistributing
+any weights.
