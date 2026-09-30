@@ -26,6 +26,5 @@ venv/
 .env.*
 !.env.example
 
-# --- Keep empty-directory placeholders ---
+# --- Keep the model download target present in a fresh clone ---
 !models/.gitkeep
-!benchmarks/results/.gitkeep

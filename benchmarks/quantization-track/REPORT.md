@@ -153,31 +153,41 @@ quantization-track/
 ├── eval/
 │   ├── prompts.py      the fixed prompt set
 │   └── ppl_corpus.txt  the fixed perplexity corpus
-├── models/             .gguf files (git-ignored, hundreds of MB)
 └── results/            per-run raw output + master.log
 ```
 
-Model files are not committed. See
-[03-deployment.md](../../docs/03-deployment.md) §3 for acquisition.
+Model files are not committed and no model directory is required — `run_file.sh`
+takes the model path as an argument. Fetch a GGUF first; see
+[03-deployment.md](../../docs/03-deployment.md) §3 for acquisition, which
+includes a resumable, integrity-checked downloader.
 
 ---
 
 ## 5. Reproducing a run
 
 ```bash
-./scripts/setup.sh                                  # build llama.cpp (CPU)
-bash benchmarks/quantization-track/scripts/run_file.sh e2b_qat <path/to.gguf>
+./scripts/download-model.sh --preset gemma-4-e2b-qat   # or supply your own GGUF
+bash benchmarks/quantization-track/scripts/run_file.sh e2b_qat models/<file>.gguf
 ```
 
 All paths are resolved relative to the repository, so the track runs from any
-checkout location. Each stage reports its own failure into `results/master.log`
-and the suite aborts if fewer than 11 prompts were recorded, so a truncated run
+checkout location. Each stage reports its own failure into `results/master.log`,
+and the suite aborts if fewer than 11 prompts were recorded — a truncated run
 cannot be mistaken for a complete one.
 
 Expect on the order of 3–4 minutes per cell for bench + eval, plus ~2 minutes
 for the perplexity pass. Peak RSS stays within ~4.2 GiB for the E2B cells; the
 E4B cells are the ones that push swap, per
 [03-deployment.md](../../docs/03-deployment.md) §4.
+
+> **Note on the weights used for the recorded run.** The local copies of the
+> GGUF files present during this campaign turned out to be truncated transfers
+> (263 MB, 260 MB and 82 MB, against an expected ~3.1 GiB for the E2B QAT
+> build). They failed to load with `tensor ... not within the file bounds` and
+> were discarded rather than repaired. The figures in §3.2 come from the
+> complete `e2b_qat` run recorded in `results/`, taken before the corruption was
+> noticed; the truncated files produced no usable measurement. Any re-run must
+> start from a fresh, verified download.
 
 ---
 

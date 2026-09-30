@@ -137,13 +137,11 @@ per-run output is retained in `results/`.
 ├── models/                      .gguf files, git-ignored
 ├── .run/                        deployment pid/log/metadata, git-ignored
 └── benchmarks/
-    ├── quantization-track/
-    │   ├── REPORT.md            methodology, results, status
-    │   ├── scripts/             run_file / run_bench / run_ppl / run_eval
-    │   ├── eval/                fixed prompt set + perplexity corpus
-    │   ├── models/              .gguf files, git-ignored
-    │   └── results/             raw per-run output
-    └── results/
+    └── quantization-track/
+        ├── REPORT.md            methodology, results, status
+        ├── scripts/             run_file / run_bench / run_ppl / run_eval
+        ├── eval/                fixed prompt set + perplexity corpus
+        └── results/             raw per-run output
 ```
 
 **llama.cpp is not vendored in this repository.** It is cloned from upstream by
