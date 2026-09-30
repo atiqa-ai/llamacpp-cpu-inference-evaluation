@@ -1,0 +1,7 @@
+[21:52:50] START e2b_qat
+size_bytes=3349516256
+size_human=3.2G
+[21:52:51] bench
+bench_exit=0
+bench_maxrss_kb=4420064
+[21:54:36] DONE e2b_qat

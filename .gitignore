@@ -1,0 +1,28 @@
+# --- Model weights (never committed: hundreds of MB, exceeds GitHub's 100 MB limit) ---
+*.gguf
+*.safetensors
+*.bin
+*.pt
+
+# --- Upstream llama.cpp checkout (cloned by scripts/setup.sh, not vendored) ---
+/llama.cpp/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- OS / editor ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Keep empty-directory placeholders ---
+!models/.gitkeep
+!benchmarks/results/.gitkeep
